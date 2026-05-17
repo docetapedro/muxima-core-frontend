@@ -1,0 +1,1 @@
+import{q as o}from"./index-Cf41q6D7.js";const t={listar(i={}){return o.get("/api/condominios",{params:i})},criar(i){return o.post("/api/condominios",i)},atualizar(i,r){return o.put(`/api/condominios/${i}`,r)},eliminar(i){return o.delete(`/api/condominios/${i}`)}};export{t as c};

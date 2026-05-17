@@ -1,0 +1,1 @@
+import{q as t}from"./index-Cf41q6D7.js";const o={listar(i={}){return t.get("/api/tipologias",{params:i})},criar(i){return t.post("/api/tipologias",i)},atualizar(i,a){return t.put(`/api/tipologias/${i}`,a)},eliminar(i){return t.delete(`/api/tipologias/${i}`)}};export{o as t};

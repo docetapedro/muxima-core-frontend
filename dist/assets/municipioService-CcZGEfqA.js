@@ -1,0 +1,1 @@
+import{q as r}from"./index-Cf41q6D7.js";const a={listar(i={}){return r.get("/api/municipios",{params:i})},criar(i){return r.post("/api/municipios",i)},atualizar(i,t){return r.put(`/api/municipios/${i}`,t)},eliminar(i){return r.delete(`/api/municipios/${i}`)}};export{a as m};
