@@ -42,6 +42,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import tipoProjectoService from '@/services/tipoProjectoService'
+import { getCachedLookup } from '@/composables/useLookupCache'
 
 const props = defineProps({
     validationErrors: { type: Object, default: () => ({}) },
@@ -50,7 +51,9 @@ const props = defineProps({
 const formData = defineModel({ type: Object, required: true })
 
 function parseItems(res) {
-    return res?.data?.dados?.items ?? res?.data?.dados ?? res?.data?.items ?? []
+    const raw = res?.data?.dados?.items ?? res?.data?.dados ?? res?.data?.items ?? []
+    if (!Array.isArray(raw)) return []
+    return raw.filter((it) => it && (it.id != null || it.value != null))
 }
 
 const tiposProjectos = ref([])
@@ -59,8 +62,10 @@ const loadingTipos = ref(false)
 async function loadTipos() {
     loadingTipos.value = true
     try {
-        const res = await tipoProjectoService.listar()
-        tiposProjectos.value = parseItems(res)
+        tiposProjectos.value = await getCachedLookup(
+            'lookup:tipoProjectos',
+            async () => parseItems(await tipoProjectoService.listar())
+        )
     } finally {
         loadingTipos.value = false
     }

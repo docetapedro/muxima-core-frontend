@@ -17,7 +17,13 @@
         class="flex-1 min-w-48 px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
       <select v-model="filterAdministrador"
         class="px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring">
-        <option value="">Todos</option>
+        <option value="">Administrador</option>
+        <option value="true">Sim</option>
+        <option value="false">Não</option>
+      </select>
+      <select v-model="filterActivo"
+        class="px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+        <option value="">Activo</option>
         <option value="true">Sim</option>
         <option value="false">Não</option>
       </select>
@@ -27,6 +33,11 @@
         <Search v-else class="w-4 h-4" />
         Pesquisar
       </button>
+    </div>
+
+    <!-- TOTAL (acima da tabela) -->
+    <div v-if="paginacao" class="text-xs text-muted-foreground">
+      Total: <span class="font-medium text-foreground">{{ paginacao.total }}</span>
     </div>
 
     <div class="bg-card border border-border rounded-xl overflow-hidden">
@@ -67,17 +78,53 @@
                 <button @click="openView(user)" class="text-primary hover:text-primary/80 transition-colors" title="Ver">
                   <EyeIcon class="w-4 h-4" />
                 </button>
-                <button @click="openEdit(user)" class="text-blue-600 hover:text-blue-700 transition-colors" title="Editar">
+                <button v-if="canManage(user)" @click="openEdit(user)"
+                  class="text-blue-600 hover:text-blue-700 transition-colors" title="Editar">
                   <Pencil class="w-4 h-4" />
                 </button>
-                <button @click="openDelete(user)" class="text-red-600 hover:text-red-700 transition-colors" title="Excluir">
+                <button v-if="canManage(user)" @click="openDelete(user)"
+                  class="text-red-600 hover:text-red-700 transition-colors" title="Excluir">
                   <Trash2 class="w-4 h-4" />
                 </button>
+                <Lock v-if="!canManage(user)" class="w-4 h-4 text-muted-foreground"
+                  title="Só superadministradores podem editar ou eliminar este utilizador" />
               </div>
             </td>
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- PAGINAÇÃO -->
+    <div v-if="paginacao" class="flex items-center justify-between gap-3 px-4 py-3 border-t border-border bg-card">
+      <div class="text-xs text-muted-foreground">
+        Total: <span class="font-medium text-foreground">{{ paginacao.total }}</span>
+        · Página <span class="font-medium text-foreground">{{ paginacao.pagina_actual }}</span> de
+        <span class="font-medium text-foreground">{{ paginacao.ultima_pagina }}</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          class="px-3 py-1 rounded-md border border-border bg-background text-sm hover:bg-muted disabled:opacity-50"
+          :disabled="paginacao.pagina_actual <= 1" @click="pesquisar(paginacao.pagina_actual - 1)">
+          Anterior
+        </button>
+
+        <div class="flex items-center gap-1">
+          <button v-for="page in pagesToShow" :key="page" class="px-3 py-1 rounded-md border text-sm hover:bg-muted"
+            :class="page === paginacao.pagina_actual ? 'bg-primary text-primary-foreground border-primary' : 'bg-background border-border text-foreground'"
+            @click="pesquisar(page)">
+            {{ page }}
+          </button>
+        </div>
+
+        <button
+          class="px-3 py-1 rounded-md border border-border bg-background text-sm hover:bg-muted disabled:opacity-50"
+          :disabled="paginacao.pagina_actual >= paginacao.ultima_pagina"
+          @click="pesquisar(paginacao.pagina_actual + 1)">
+          Próxima
+        </button>
+      </div>
     </div>
 
     <UserViewModal v-model="showViewModal" :user="selected" />
@@ -95,17 +142,41 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { EyeIcon, Search, Loader2, Pencil, Trash2, PlusCircleIcon } from 'lucide-vue-next'
+import { ref, computed, onMounted } from 'vue'
+import { EyeIcon, Search, Loader2, Pencil, Trash2, PlusCircleIcon, Lock } from 'lucide-vue-next'
+import { toast } from 'vue-sonner'
 import { useCrud } from '@/composables/useCrud'
+import { useAuthStore } from '@/stores/auth'
 import userService from '@/services/userService'
 import UserViewModal from '@/components/users/UserViewModal.vue'
 import UserFormModal from '@/components/users/UserFormModal.vue'
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal.vue'
 
+const auth = useAuthStore()
+
+function canManage(user) {
+  if (!user) return false
+  if (auth.isSuperAdmin) return true
+  return !user.superadministrador
+}
+
 const searchTerm = ref('')
 const filterAdministrador = ref('')
-const { items, loading, fetchItems, destroy } = useCrud(userService)
+const filterActivo = ref('')
+const { items, paginacao, loading, fetchItems, destroy } = useCrud(userService)
+
+const pagesToShow = computed(() => {
+  if (!paginacao.value) return []
+  const last = paginacao.value.ultima_pagina
+  const current = paginacao.value.pagina_actual
+
+  const start = Math.max(1, current - 2)
+  const end = Math.min(last, current + 2)
+
+  const pages = []
+  for (let p = start; p <= end; p++) pages.push(p)
+  return pages
+})
 
 const showViewModal = ref(false)
 const showCreateModal = ref(false)
@@ -115,10 +186,12 @@ const selected = ref(null)
 const deleting = ref(false)
 const deleteError = ref('')
 
-function pesquisar() {
+function pesquisar(page = 1) {
   fetchItems({
-    search: searchTerm.value,
-    administrador: filterAdministrador.value
+    page,
+    search: searchTerm.value || undefined,
+    administrador: filterAdministrador.value || undefined,
+    activo: filterActivo.value || undefined
   })
 }
 
@@ -132,11 +205,19 @@ function openView(user) {
 }
 
 function openEdit(user) {
+  if (!canManage(user)) {
+    toast.error('Só superadministradores podem editar este utilizador.')
+    return
+  }
   selected.value = user
   showEditModal.value = true
 }
 
 function openDelete(user) {
+  if (!canManage(user)) {
+    toast.error('Só superadministradores podem eliminar este utilizador.')
+    return
+  }
   selected.value = user
   deleteError.value = ''
   showDeleteModal.value = true
@@ -144,6 +225,10 @@ function openDelete(user) {
 
 async function confirmDelete() {
   if (!selected.value) return
+  if (!canManage(selected.value)) {
+    deleteError.value = 'Só superadministradores podem eliminar este utilizador.'
+    return
+  }
   deleting.value = true
   deleteError.value = ''
   const ok = await destroy(selected.value.id, deleteError)
@@ -154,5 +239,7 @@ async function confirmDelete() {
   }
 }
 
-onMounted(pesquisar)
+onMounted(() => {
+  pesquisar(1)
+})
 </script>

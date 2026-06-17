@@ -1,0 +1,1 @@
+import{u as t}from"./index-BUQf__vo.js";const i={listar(e={}){return t.get("/api/entidades",{params:e})},obter(e){return t.get(`/api/entidades/${e}`)},criar(e){return t.post("/api/entidades",e)},atualizar(e,r){return t.put(`/api/entidades/${e}`,r)},eliminar(e){return t.delete(`/api/entidades/${e}`)}};export{i as e};

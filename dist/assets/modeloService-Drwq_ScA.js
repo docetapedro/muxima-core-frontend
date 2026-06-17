@@ -1,1 +1,0 @@
-import{q as r}from"./index-Cf41q6D7.js";const a={listar(e={}){return r.get("/api/modelos",{params:e})},criar(e){return r.post("/api/modelos",e)},atualizar(e,o){return r.put(`/api/modelos/${e}`,o)},eliminar(e){return r.delete(`/api/modelos/${e}`)}};export{a as m};

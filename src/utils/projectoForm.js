@@ -20,6 +20,6 @@ export function projectoToPayload(formData) {
   return {
     nome: rest.nome,
     descricao: rest.descricao,
-    tipo_projecto_id: rest.tipo_projecto,
+    tipo_projecto: rest.tipo_projecto,
   }
 }

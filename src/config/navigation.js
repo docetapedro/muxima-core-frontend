@@ -64,7 +64,6 @@ export const navigation = [
       { type: 'link', name: 'pagamentos-list', label: 'Pagamentos', to: '/pagamentos' },
       { type: 'link', name: 'extrato-contas', label: 'Extrato de Contas', to: '/extrato-contas' },
       { type: 'link', name: 'extrato-condominios', label: 'Extrato de Condomínios', to: '/extrato-condominios' },
-      { type: 'link', name: 'import-pagamentos', label: 'Import. de pagamentos', to: '/importador-pagamentos' },
       { type: 'link', name: 'exploracao', label: 'Exploração', to: '/pagamentos/exploracao' }
     ]
   },
@@ -74,9 +73,11 @@ export const navigation = [
     label: 'Relatórios',
     icon: BarChart2,
     children: [
-      { type: 'link', name: 'stock-vendas', label: 'Resumo de Stock/Vendas', to: '/relatorios/stock-vendas' },
       { type: 'link', name: 'analise-financeira', label: 'Análise Financeira', to: '/relatorios/analise-financeira' },
-      { type: 'link', name: 'inadimplencia', label: 'Inadimplência por Condomínio', to: '/relatorios/inadimplencia-condominio' }
+      { type: 'link', name: 'inadimplencia', label: 'Inadimplência por Condomínio', to: '/relatorios/inadimplencia-condominio' },
+      { type: 'link', name: 'aging-inadimplencia', label: 'Aging de Inadimplência', to: '/relatorios/aging-inadimplencia' },
+      { type: 'link', name: 'mapa-cobranca', label: 'Mapa de Cobrança Mensal', to: '/relatorios/mapa-cobranca-mensal' },
+      { type: 'link', name: 'cash-flow', label: 'Cash Flow Projectado', to: '/relatorios/cash-flow-projectado' }
     ]
   },
   {
@@ -85,8 +86,9 @@ export const navigation = [
     label: 'Importações',
     icon: ImportIcon,
     children: [
-      { type: 'link', name: 'importacao-geral', label: 'Importação geral', to: '/importacao' },
-      { type: 'link', name: 'importacao-beneficiarios', label: 'Beneficiários', to: '/importacao/beneficiarios' }
+      
+      { type: 'link', name: 'importacao-entidades', label: 'Entidades', to: '/importacao/entidades' },
+      { type: 'link', name: 'importacao-pagamentos', label: 'Pagamentos', to: '/importacao/pagamentos' }
     ]
   },
   {
@@ -111,6 +113,7 @@ export const navigation = [
         label: 'Imóvel',
         children: [
           { type: 'link', name: 'modelos', label: 'Modelos', to: '/modelos' },
+          { type: 'link', name: 'modelo-entregas', label: 'Modelos de Entrega', to: '/modelo-entregas' },
           { type: 'link', name: 'tipoimoveis', label: 'Tipo Imóveis', to: '/tipoimoveis' },
           { type: 'link', name: 'tipoextras', label: 'Tipo de Extras', to: '/tipo-extras' },
           { type: 'link', name: 'tipolotes', label: 'Tipo de Lotes', to: '/tipo-lotes' },
@@ -129,7 +132,8 @@ export const navigation = [
       },
       { type: 'link', name: 'projectos', label: 'Projectos', to: '/projectos' },
       { type: 'link', name: 'condominios-config', label: 'Condomínios', to: '/condominios' },
-      { type: 'link', name: 'tipos-projectos', label: 'Tipos de Proj.', to: '/tipos-projectos' },
+      { type: 'link', name: 'tipos-projectos', label: 'Tipos de Proj.', to: '/tipoprojectos' },
+      { type: 'link', name: 'items', label: 'Items', to: '/items' },
       {
         type: 'group',
         name: 'configuracoes.suporte',

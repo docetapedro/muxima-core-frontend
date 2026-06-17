@@ -19,7 +19,7 @@
       <button
         type="button"
         @click="visible = false"
-        class="px-4 py-2 text-sm rounded-md bg-muted hover:bg-muted/70"
+        class="px-4 py-2 text-sm rounded-md bg-muted text-black hover:bg-muted/70"
       >
         Cancelar
       </button>
@@ -27,7 +27,7 @@
         type="submit"
         form="municipio-form"
         :disabled="loading"
-        class="px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+        class="px-4 py-2 text-sm rounded-md bg-primary text-white hover:bg-primary/90 disabled:opacity-50"
       >
         <Loader2 v-if="loading" class="w-4 h-4 animate-spin inline mr-1" />
         {{ isEdit ? 'Salvar' : 'Salvar' }}
@@ -46,6 +46,7 @@ import MunicipioFormFields from './MunicipioFormFields.vue'
 import municipioService from '@/services/municipioService'
 import { useApiErrorHandler } from '@/composables/useApiErrorHandler'
 import { emptyMunicipio, municipioFromRecord, municipioToPayload } from '@/utils/municipioForm'
+import { invalidateLookupPrefix } from '@/composables/useLookupCache'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -87,6 +88,7 @@ async function submit() {
       ? await municipioService.atualizar(formData.value.id, payload)
       : await municipioService.criar(payload)
 
+    invalidateLookupPrefix('lookup:municipios:')
     toast.success(response.data?.message || (isEdit.value ? 'Município atualizado com sucesso!' : 'Município registrado com sucesso!'))
     emit('success')
     visible.value = false

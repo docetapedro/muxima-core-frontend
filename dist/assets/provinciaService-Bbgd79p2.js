@@ -1,0 +1,1 @@
+import{u as i}from"./index-BUQf__vo.js";const p={listar(r={}){return i.get("/api/provincias",{params:r})},obter(r){return i.get(`/api/provincias/${r}`)},criar(r){return i.post("/api/provincias",r)},atualizar(r,a){return i.put(`/api/provincias/${r}`,a)},eliminar(r){return i.delete(`/api/provincias/${r}`)}};export{p};

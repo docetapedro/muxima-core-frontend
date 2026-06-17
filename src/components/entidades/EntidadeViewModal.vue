@@ -5,7 +5,7 @@
         <div class="space-y-2">
           <div>
             <div class="text-xs text-muted-foreground">Tipo</div>
-            <div class="font-medium">{{ currentEntidade.tipo || '-' }}</div>
+            <div class="font-medium">{{ getTipoEntidadeLabel(currentEntidade.tipo) }}</div>
           </div>
 
           <div>
@@ -38,7 +38,12 @@
           </div>
 
           <div>
-            <div class="text-xs text-muted-foreground">Data Emissão BI</div>
+            <div class="text-xs text-muted-foreground">Nº Cartão de Residente</div>
+            <div class="font-medium">{{ currentEntidade.num_cartao_residente || '-' }}</div>
+          </div>
+
+          <div>
+            <div class="text-xs text-muted-foreground">Data Emissão</div>
             <div class="font-medium">{{ formatDate(currentEntidade.data_emissao) }}</div>
           </div>
 
@@ -116,7 +121,7 @@
 <script setup>
 import { computed } from 'vue'
 import ModalWrapper from '@/components/common/ModalWrapper.vue'
-import { getEstadoCivilLabel, formatDate } from '@/utils/entidadeLabels'
+import { getEstadoCivilLabel, formatDate, getTipoEntidadeLabel } from '@/utils/entidadeLabels'
 
 const props = defineProps({
   modelValue: Boolean,

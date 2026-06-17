@@ -13,7 +13,7 @@
       <button
         type="button"
         @click="visible = false"
-        class="px-4 py-2 text-sm rounded-md bg-muted hover:bg-muted/70"
+        class="px-4 py-2 text-sm rounded-md bg-muted text-black hover:bg-muted/70"
       >
         Cancelar
       </button>

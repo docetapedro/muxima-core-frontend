@@ -34,11 +34,6 @@
         <p class="text-sm mt-1">{{ imovel?.area_lote ?? '-' }}</p>
       </div>
       <div>
-        <label class="text-xs font-medium text-muted-foreground">Moeda</label>
-        <p class="text-sm mt-1">{{ imovel?.moeda ?? '-' }}</p>
-      </div>
-     
-      <div>
         <label class="text-xs font-medium text-muted-foreground">Estado do Imóvel</label>
         <p class="text-sm mt-1">{{ imovel?.estado_imovel ?? '-' }}</p>
       </div>

@@ -44,20 +44,22 @@
           <thead class="border-b border-border bg-muted/50">
             <tr>
               <th class="text-left px-4 py-3 font-medium text-muted-foreground">Nome</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground">Descrição</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground">Tipo de Projecto</th>
               <th class="text-left px-4 py-3 font-medium text-muted-foreground">Operações</th>
             </tr>
           </thead>
 
           <tbody>
             <tr v-if="loading">
-              <td colspan="2" class="text-center py-12 text-muted-foreground">
+              <td colspan="4" class="text-center py-12 text-muted-foreground">
                 <Loader2 class="w-6 h-6 animate-spin mx-auto mb-2" />
                 A carregar...
               </td>
             </tr>
 
             <tr v-else-if="items.length === 0">
-              <td colspan="2" class="text-center py-12 text-muted-foreground">
+              <td colspan="4" class="text-center py-12 text-muted-foreground">
                 Nenhum projecto encontrado.
               </td>
             </tr>
@@ -69,6 +71,8 @@
               class="border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
             >
               <td class="px-4 py-3">{{ projecto.nome || '-' }}</td>
+              <td class="px-4 py-3">{{ projecto.descricao || '-' }}</td>
+              <td class="px-4 py-3">{{ projecto.tipoProjecto?.nome ?? projecto.tipo_projecto?.nome ?? '-' }}</td>
 
               <td class="px-4 py-3">
                 <div class="flex items-center gap-3">
@@ -172,6 +176,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { EyeIcon, Search, Loader2, Pencil, Trash2, PlusCircleIcon } from 'lucide-vue-next'
 import { useCrud } from '@/composables/useCrud'
+import { invalidateLookup } from '@/composables/useLookupCache'
 import projectoService from '@/services/projectoService'
 
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal.vue'
@@ -240,6 +245,7 @@ async function confirmDelete() {
   const ok = await destroy(selected.value.id, deleteError)
   deleting.value = false
   if (ok) {
+    invalidateLookup('lookup:projectos')
     showDeleteModal.value = false
     selected.value = null
   }

@@ -27,8 +27,8 @@
         v-model="filterProvinciaId"
         class="px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
       >
-        <option :value="null">Todas as províncias</option>
-        <option v-for="prov in provincias" :key="prov.id ?? prov.value ?? prov.nome" :value="prov.id ?? prov.value ?? prov">
+        <option value="">Todas as províncias</option>
+        <option v-for="prov in provincias" :key="prov.id ?? prov.value ?? prov.nome" :value="prov.id">
           {{ prov.nome ?? prov.label ?? prov.value }}
         </option>
       </select>
@@ -179,6 +179,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { EyeIcon, Search, Loader2, Pencil, Trash2, PlusCircleIcon } from 'lucide-vue-next'
 import { useCrud } from '@/composables/useCrud'
+import { invalidateLookupPrefix } from '@/composables/useLookupCache'
 import municipioService from '@/services/municipioService'
 import provinciaService from '@/services/provinciaService'
 
@@ -187,7 +188,7 @@ import MunicipioFormModal from '@/components/municipios/MunicipioFormModal.vue'
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal.vue'
 
 const filterNome = ref('')
-const filterProvinciaId = ref(null)
+const filterProvinciaId = ref('')
 
 const provincias = ref([])
 
@@ -217,7 +218,7 @@ const pagesToShow = computed(() => {
 
 async function loadProvincias() {
   try {
-    const res = await provinciaService.listar()
+    const res = await provinciaService.listar({ quantidade: 25 })
     const items = res.data?.dados?.items ?? res.data?.dados ?? res.data?.items ?? []
     provincias.value = items
   } catch (e) {
@@ -227,10 +228,13 @@ async function loadProvincias() {
 }
 
 function pesquisar(page = 1) {
+  const provinciaId = filterProvinciaId.value || undefined
+
   fetchItems({
     page,
     nome: filterNome.value || undefined,
-    provincia_id: filterProvinciaId.value || undefined,
+    provincia_id: provinciaId,
+    provincia: provinciaId,
   })
 }
 
@@ -261,6 +265,7 @@ async function confirmDelete() {
   const ok = await destroy(selected.value.id, deleteError)
   deleting.value = false
   if (ok) {
+    invalidateLookupPrefix('lookup:municipios:')
     showDeleteModal.value = false
     selected.value = null
   }

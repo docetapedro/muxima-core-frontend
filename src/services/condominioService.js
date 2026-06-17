@@ -5,6 +5,10 @@ export default {
     return http.get('/api/condominios', { params })
   },
 
+  obter(id) {
+    return http.get(`/api/condominios/${id}`)
+  },
+
   criar(data) {
     return http.post('/api/condominios', data)
   },

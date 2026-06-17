@@ -6,7 +6,7 @@
         <p class="text-muted-foreground text-sm mt-1">Informações completas</p>
       </div>
 
-      <RouterLink to="/municipios" class="px-4 py-2 rounded-md bg-muted hover:bg-muted/70 text-sm">
+      <RouterLink to="/municipios" class="px-4 py-2 rounded-md bg-muted text-black hover:bg-muted/70 text-sm">
         Voltar
       </RouterLink>
     </div>

@@ -1,0 +1,1 @@
+import{u as e}from"./index-BUQf__vo.js";const u={listar(r={}){return e.get("/api/users",{params:r})},criar(r){return e.post("/api/users",r)},atualizar(r,t){return e.put(`/api/users/${r}`,t)},eliminar(r){return e.delete(`/api/users/${r}`)}};export{u};

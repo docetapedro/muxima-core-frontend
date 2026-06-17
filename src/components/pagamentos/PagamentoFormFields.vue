@@ -1,31 +1,49 @@
 <template>
   <div class="space-y-4">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3 p-3 border border-dashed border-border rounded-md bg-muted/5">
+        <div>
+          <label class="text-xs text-muted-foreground block mb-1">Filtrar por Condomínio</label>
+          <select
+            v-model="filtroCondominio"
+            class="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
+          >
+            <option :value="null">Todos</option>
+            <option v-for="c in condominiosDisponiveis" :key="c.key" :value="c.key">
+              {{ c.label }}
+            </option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-xs text-muted-foreground block mb-1">Filtrar por Imóvel</label>
+          <select
+            v-model="filtroImovel"
+            class="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
+          >
+            <option :value="null">Todos</option>
+            <option v-for="i in imoveisDisponiveis" :key="i.id" :value="i.id">
+              {{ i.referencia }}
+            </option>
+          </select>
+        </div>
+      </div>
+
       <div>
-        <label class="text-xs text-muted-foreground block mb-1">Negociação *</label>
+        <label class="text-xs text-muted-foreground block mb-1">Item da Negociação *</label>
         <select
-          v-model="model.negociacao"
+          v-model="model.negociacao_item"
           class="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
           required
         >
           <option value="">Selecione</option>
-          <option v-for="n in negociacoes" :key="n.id" :value="n.id">
-            {{ getNegotiationLabel(n) }}
+          <option v-for="n in negociacoesFiltradas" :key="n.id" :value="n.id">
+            {{ getNegociacaoItemLabel(n) }}
           </option>
         </select>
-      </div>
-
-      <div>
-        <label class="text-xs text-muted-foreground block mb-1">Moeda</label>
-        <select
-          v-model="model.moeda"
-          class="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
-        >
-          <option value="">Selecione</option>
-          <option v-for="m in moedas" :key="m.id" :value="m.id">
-            {{ m.nome || m.codigo || m.id }}
-          </option>
-        </select>
+        <p v-if="!negociacoesFiltradas.length" class="text-xs text-muted-foreground mt-1">
+          Nenhum item disponível com este filtro.
+        </p>
       </div>
 
       <div>
@@ -45,22 +63,20 @@
       <div>
         <label class="text-xs text-muted-foreground block mb-1">Valor *</label>
         <input
-          v-model.number="model.valor"
-          type="number"
-          step="0.01"
+          :value="valorFormatado"
+          type="text"
+          inputmode="decimal"
+          autocomplete="off"
           required
           class="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
+          @keydown="handleValorKeydown"
+          @input="handleValorInput"
         />
       </div>
 
       <div>
         <label class="text-xs text-muted-foreground block mb-1">Data Pagamento *</label>
-        <input
-          v-model="model.data_pagamento"
-          type="date"
-          required
-          class="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
-        />
+        <DatePicker v-model="model.data_pagamento" locale="en-US" />
       </div>
 
       <div>
@@ -94,81 +110,243 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue'
-import http from '@/api/http'
+import { computed, ref, watch } from 'vue'
+import { DatePicker } from '@tiaohsun/vue-datepicker'
+import '@tiaohsun/vue-datepicker/style'
+import { formataEntradaNumerica } from '@/utils/formatacao'
 
 const props = defineProps({
   modelValue: { type: Object, required: true },
-  validationErrors: { type: Object, default: () => ({}) }
+  validationErrors: { type: Object, default: () => ({}) },
+  tiposPagamento: { type: Array, default: () => [] },
+  negociacoes: { type: Array, default: () => [] }
 })
 
 const emit = defineEmits(['update:modelValue'])
 
-const model = ref({ ...props.modelValue })
+const model = ref(normalizeModel(props.modelValue))
+
+const tiposPagamento = computed(() => props.tiposPagamento || [])
+const negociacoes = computed(() => props.negociacoes || [])
+const valorFormatado = ref('')
+
+const filtroCondominio = ref(null)
+const filtroImovel = ref(null)
+
+function getCondominioNome(ni) {
+  return ni?.nome_do_condominio
+    ?? ni?.negociacao?.imovel?.condominio?.nome
+    ?? ni?.negociacao?.imovel?.condominio?.nome_abreviado
+    ?? null
+}
+
+function getImovelReferencia(ni) {
+  return ni?.referencia_imovel ?? ni?.negociacao?.imovel?.referencia ?? null
+}
+
+const condominiosDisponiveis = computed(() => {
+  const map = new Map()
+  for (const ni of negociacoes.value) {
+    const nome = getCondominioNome(ni)
+    if (!nome) continue
+    if (!map.has(nome)) map.set(nome, { key: nome, label: nome })
+  }
+  return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label))
+})
+
+const imoveisDisponiveis = computed(() => {
+  const map = new Map()
+  for (const ni of negociacoes.value) {
+    const ref = getImovelReferencia(ni)
+    if (!ref) continue
+    if (filtroCondominio.value && getCondominioNome(ni) !== filtroCondominio.value) continue
+    if (!map.has(ref)) map.set(ref, { id: ref, referencia: ref })
+  }
+  return Array.from(map.values()).sort((a, b) =>
+    String(a.referencia ?? '').localeCompare(String(b.referencia ?? ''))
+  )
+})
+
+const negociacoesFiltradas = computed(() => {
+  const selectedId = model.value?.negociacao_item
+  return negociacoes.value.filter((ni) => {
+    if (selectedId != null && String(ni.id) === String(selectedId)) return true
+    if (filtroCondominio.value && getCondominioNome(ni) !== filtroCondominio.value) return false
+    if (filtroImovel.value && getImovelReferencia(ni) !== filtroImovel.value) return false
+    return true
+  })
+})
+
+watch(filtroCondominio, (cond) => {
+  if (cond == null) {
+    filtroImovel.value = null
+    return
+  }
+  if (filtroImovel.value && !imoveisDisponiveis.value.some((i) => i.id === filtroImovel.value)) {
+    filtroImovel.value = null
+  }
+})
+
+watch(
+  () => props.modelValue?.valor,
+  (valor) => {
+    valorFormatado.value = formataEntradaNumerica(valor)
+  },
+  { immediate: true }
+)
+
+function handleValorKeydown(event) {
+  const allowedKeys = [
+    'Backspace',
+    'Delete',
+    'Tab',
+    'ArrowLeft',
+    'ArrowRight',
+    'ArrowUp',
+    'ArrowDown',
+    'Home',
+    'End',
+    'Enter'
+  ]
+
+  if (
+    allowedKeys.includes(event.key) ||
+    event.ctrlKey ||
+    event.metaKey
+  ) {
+    return
+  }
+
+  if (!/[\d,]/.test(event.key)) {
+    event.preventDefault()
+    return
+  }
+
+  if (!/^\d$/.test(event.key)) {
+    return
+  }
+
+  const input = event.target
+  const valorAtual = String(input.value || '')
+  const virgulaIndex = valorAtual.indexOf(',')
+
+  if (virgulaIndex === -1) {
+    return
+  }
+
+  const posicaoCursor = input.selectionStart ?? valorAtual.length
+
+  if (posicaoCursor <= virgulaIndex) {
+    return
+  }
+
+  const decimaisAtuais = valorAtual.slice(virgulaIndex + 1).replace(/\D/g, '')
+  const selecaoIniciaNaParteDecimal = (input.selectionStart ?? 0) > virgulaIndex
+  const selecaoTerminaNaParteDecimal = (input.selectionEnd ?? 0) > virgulaIndex
+  const estaEditandoDecimal = selecaoIniciaNaParteDecimal || selecaoTerminaNaParteDecimal
+
+  if (estaEditandoDecimal && decimaisAtuais.length >= 3 && input.selectionStart === input.selectionEnd) {
+    event.preventDefault()
+  }
+}
+
+function handleValorInput(event) {
+  const input = event.target
+  const valor = input.value
+    .replace(/ /g, '')
+    .replace(/[^\d,]/g, '')
+
+  const parts = valor.split(',')
+  const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+
+  let formattedValue = integerPart
+  if (parts.length === 2) {
+    const decimalPart = parts[1].substring(0, 3)
+    formattedValue += `,${decimalPart}`
+  }
+
+  input.value = formattedValue
+  valorFormatado.value = formattedValue
+  model.value.valor = formattedValue
+}
+
+function normalizeModel(source) {
+  const normalized = { ...(source || {}) }
+  normalized.data_pagamento = normalizeDateOnly(normalized.data_pagamento)
+  return normalized
+}
+
+function normalizeDateOnly(value) {
+  if (!value) return ''
+
+  const text = String(value).trim()
+  const datePart = text.split('T')[0]
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+    return datePart
+  }
+
+  return datePart.slice(0, 10)
+}
+
+let suppressModelSync = false
 
 watch(
   () => props.modelValue,
   (v) => {
-    model.value = { ...v }
-  },
-  { deep: true }
+    if (suppressModelSync) {
+      suppressModelSync = false
+      return
+    }
+    model.value = normalizeModel(v)
+  }
 )
 
 watch(
   model,
   (v) => {
+    suppressModelSync = true
     emit('update:modelValue', v)
   },
   { deep: true }
 )
 
-const moedas = ref([])
-const tiposPagamento = ref([])
-const negociacoes = ref([])
+function getNegociacaoItemLabel(ni) {
+  if (!ni) return '-'
 
-function getNegotiationLabel(n) {
-  const imovelRef = n?.imovel?.referencia || '-'
-  const entidadePrincipalNome = Array.isArray(n?.entidade_principal) && n.entidade_principal.length
-    ? (n.entidade_principal[0]?.nome || '-')
-    : '-'
+  const neg = ni?.negociacao ?? null
+  const numero = ni?.numero ?? neg?.numero ?? null
+  const imovelRef = getImovelReferencia(ni)
 
-  const codigo = n?.codigo || n?.id || '-'
-  return `${imovelRef} · ${entidadePrincipalNome} (${codigo})`
+  const entidadeSource = neg?.entidadePrincipal ?? neg?.entidade_principal ?? ni?.entidadePrincipal ?? null
+  const entidadeNome = ni?.nome_entidade
+    ?? (Array.isArray(entidadeSource)
+      ? entidadeSource[0]?.nome
+      : entidadeSource?.nome)
+    ?? null
+  const numEntidade = ni?.num_entidade
+    ?? (Array.isArray(entidadeSource)
+      ? entidadeSource[0]?.num_entidade
+      : entidadeSource?.num_entidade)
+    ?? null
+  const entidadeLabel = entidadeNome && numEntidade
+    ? `${entidadeNome} (Nº ${numEntidade})`
+    : (entidadeNome || (numEntidade ? `Nº ${numEntidade}` : null))
+
+  const itemInner = ni?.item ?? null
+  const nomeItem = ni?.nome_item
+    ?? (itemInner?.codigo && itemInner?.nome
+      ? `${itemInner.codigo} - ${itemInner.nome}`
+      : (itemInner?.nome || itemInner?.codigo))
+    ?? null
+
+  const partes = [
+    numero ? `Nº ${numero}` : null,
+    imovelRef,
+    entidadeLabel,
+    nomeItem
+  ].filter(Boolean)
+
+  return partes.length ? partes.join(' · ') : `Item #${ni?.id ?? '-'}`
 }
-
-async function loadSelects() {
-  // moedas
-  try {
-    const resMoedas = await http.get('/api/moedas')
-    const dados = resMoedas?.data?.dados
-    const items = Array.isArray(dados?.items) ? dados.items : (Array.isArray(dados) ? dados : [])
-    moedas.value = items
-  } catch (e) {
-    moedas.value = []
-  }
-
-  // tipos de pagamento
-  try {
-    const resTipos = await http.get('/api/tipopagamentos')
-    const dados = resTipos?.data?.dados
-    const items = Array.isArray(dados?.items) ? dados.items : (Array.isArray(dados) ? dados : [])
-    tiposPagamento.value = items
-  } catch (e) {
-    tiposPagamento.value = []
-  }
-
-  // negociacoes
-  try {
-    const resNeg = await http.get('/api/negociacaos')
-    const dados = resNeg?.data?.dados
-    const items = Array.isArray(dados?.items) ? dados.items : (Array.isArray(dados) ? dados : [])
-    negociacoes.value = items
-  } catch (e) {
-    negociacoes.value = []
-  }
-}
-
-onMounted(() => {
-  loadSelects()
-})
 </script>

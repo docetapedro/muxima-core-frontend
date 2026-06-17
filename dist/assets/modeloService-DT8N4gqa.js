@@ -1,0 +1,1 @@
+import{u as r}from"./index-BUQf__vo.js";const a={listar(e={}){return r.get("/api/modelos",{params:e})},criar(e){return r.post("/api/modelos",e)},atualizar(e,o){return r.put(`/api/modelos/${e}`,o)},eliminar(e){return r.delete(`/api/modelos/${e}`)}};export{a as m};

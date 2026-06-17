@@ -1,1 +1,0 @@
-import{g as t,d as o,L as s,O as a,S as r,C as n}from"./index-Cf41q6D7.js";const c={class:"text-center py-24 text-muted-foreground"},d={__name:"Show",setup(u){const e=r();return(i,p)=>(n(),t("div",c,[o("p",null,"Detalhe do beneficiário #"+s(a(e).params.id),1)]))}};export{d as default};

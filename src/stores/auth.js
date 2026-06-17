@@ -22,6 +22,7 @@ export const useAuthStore = defineStore('auth', () => {
   // --- Getters ---
   const isAuthenticated = computed(() => !!accessToken.value)
   const isAdmin = computed(() => user.value?.administrador || user.value?.superadministrador)
+  const isSuperAdmin = computed(() => !!user.value?.superadministrador)
   const permissions = computed(() => user.value?.permissions || [])
 
   const hasPermission = (perm) => {
@@ -30,20 +31,42 @@ export const useAuthStore = defineStore('auth', () => {
     return permissions.value.includes(perm)
   }
 
+  function unwrap(data) {
+    return data?.dados ?? data ?? {}
+  }
+
+  function persistSession({ token, refresh_token, user: u }) {
+    if (token !== undefined) {
+      accessToken.value = token
+      if (token) localStorage.setItem('access_token', token)
+    }
+    if (refresh_token !== undefined) {
+      refreshToken.value = refresh_token
+      if (refresh_token) localStorage.setItem('refresh_token', refresh_token)
+    }
+    if (u !== undefined && u !== null) {
+      user.value = u
+      localStorage.setItem('user', JSON.stringify(u))
+    }
+  }
+
   // --- Actions ---
   async function login(credentials) {
     loading.value = true
     error.value = null
     try {
       const { data } = await authApi.login(credentials)
+      const payload = unwrap(data)
 
-      accessToken.value = data.token
-      refreshToken.value = data.refresh_token
-      user.value = data.user
+      persistSession({
+        token: payload.token ?? payload.access_token,
+        refresh_token: payload.refresh_token,
+        user: payload.user ?? payload.utilizador ?? null
+      })
 
-      localStorage.setItem('access_token', data.token)
-      localStorage.setItem('refresh_token', data.refresh_token)
-      localStorage.setItem('user', JSON.stringify(data.user))
+      if (!user.value) {
+        try { await fetchMe() } catch (_) {}
+      }
 
       router.push({ name: 'dashboard' })
     } catch (err) {
@@ -52,6 +75,23 @@ export const useAuthStore = defineStore('auth', () => {
     } finally {
       loading.value = false
     }
+  }
+
+  async function fetchMe() {
+    if (!accessToken.value) return null
+    try {
+      const { data } = await authApi.me()
+      const payload = unwrap(data)
+      const u = payload.user ?? payload.utilizador ?? payload
+      if (u && (u.id || u.email || u.name || u.nome)) {
+        user.value = u
+        localStorage.setItem('user', JSON.stringify(u))
+        return u
+      }
+    } catch (_) {
+      // silencia — usuário ainda pode usar a app
+    }
+    return null
   }
 
   async function logout() {
@@ -77,7 +117,7 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     user, accessToken, refreshToken,
     loading, error,
-    isAuthenticated, isAdmin, permissions,
-    hasPermission, login, logout, clearSession,
+    isAuthenticated, isAdmin, isSuperAdmin, permissions,
+    hasPermission, login, logout, clearSession, fetchMe,
   }
 })

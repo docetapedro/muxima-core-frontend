@@ -12,7 +12,7 @@
 
       <RouterLink
         to="/users"
-        class="px-4 py-2 rounded-md bg-muted hover:bg-muted/70 text-sm"
+        class="px-4 py-2 rounded-md bg-muted text-black hover:bg-muted/70 text-sm"
       >
         Voltar
       </RouterLink>

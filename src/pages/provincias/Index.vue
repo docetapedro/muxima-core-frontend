@@ -172,6 +172,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { EyeIcon, Search, Loader2, Pencil, Trash2, PlusCircleIcon } from 'lucide-vue-next'
 import { useCrud } from '@/composables/useCrud'
+import { invalidateLookup, invalidateLookupPrefix } from '@/composables/useLookupCache'
 import provinciaService from '@/services/provinciaService'
 
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal.vue'
@@ -207,6 +208,7 @@ const pagesToShow = computed(() => {
 function pesquisar(page = 1) {
   fetchItems({
     page,
+    quantidade: 25,
     nome: filterNome.value || undefined,
   })
 }
@@ -238,6 +240,8 @@ async function confirmDelete() {
   const ok = await destroy(selected.value.id, deleteError)
   deleting.value = false
   if (ok) {
+    invalidateLookup('lookup:provincias')
+    invalidateLookupPrefix('lookup:municipios:')
     showDeleteModal.value = false
     selected.value = null
   }

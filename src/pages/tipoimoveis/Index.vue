@@ -174,6 +174,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { EyeIcon, Search, Loader2, Pencil, Trash2, PlusCircleIcon } from 'lucide-vue-next'
 import { useCrud } from '@/composables/useCrud'
+import { invalidateLookup } from '@/composables/useLookupCache'
 import tipoImovelService from '@/services/tipoImovelService'
 
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal.vue'
@@ -242,6 +243,7 @@ async function confirmDelete() {
   const ok = await destroy(selected.value.id, deleteError)
   deleting.value = false
   if (ok) {
+    invalidateLookup('lookup:tipoImoveis')
     showDeleteModal.value = false
     selected.value = null
   }

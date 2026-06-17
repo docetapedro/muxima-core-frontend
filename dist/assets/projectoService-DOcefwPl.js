@@ -1,0 +1,1 @@
+import{u as t}from"./index-BUQf__vo.js";const p={listar(r={}){return t.get("/api/projectos",{params:r})},criar(r){return t.post("/api/projectos",r)},atualizar(r,e){return t.put(`/api/projectos/${r}`,e)},eliminar(r){return t.delete(`/api/projectos/${r}`)}};export{p};

@@ -45,6 +45,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import provinciaService from '@/services/provinciaService'
+import { getCachedLookup } from '@/composables/useLookupCache'
 
 const props = defineProps({
   validationErrors: { type: Object, default: () => ({}) }
@@ -58,10 +59,10 @@ const loadingProvincias = ref(false)
 async function loadProvincias() {
   loadingProvincias.value = true
   try {
-    const res = await provinciaService.listar()
-    // expected: { dados: { items: [...] } } or { dados: { data: [...] } } or { data: [...] }
-    const items = res.data?.dados?.items ?? res.data?.dados ?? res.data?.items ?? []
-    provincias.value = items
+    provincias.value = await getCachedLookup('lookup:provincias', async () => {
+      const res = await provinciaService.listar({ quantidade: 25 })
+      return res.data?.dados?.items ?? res.data?.dados ?? res.data?.items ?? []
+    })
   } catch (e) {
     console.error(e)
     provincias.value = []

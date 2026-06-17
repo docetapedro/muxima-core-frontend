@@ -22,18 +22,8 @@
       </div>
 
       <div>
-        <label class="text-xs font-medium text-muted-foreground">Moeda ID</label>
-        <p class="text-sm mt-1">{{ condominio?.moeda_id ?? '-' }}</p>
-      </div>
-
-      <div>
         <label class="text-xs font-medium text-muted-foreground">Valor global</label>
         <p class="text-sm mt-1">{{ condominio?.valor_global ?? '-' }}</p>
-      </div>
-
-      <div>
-        <label class="text-xs font-medium text-muted-foreground">Valor dólar</label>
-        <p class="text-sm mt-1">{{ condominio?.valor_dolar ?? '-' }}</p>
       </div>
 
       <div class="col-span-full">

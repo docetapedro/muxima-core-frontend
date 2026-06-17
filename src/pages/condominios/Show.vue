@@ -13,7 +13,7 @@
 
       <RouterLink
         to="/condominios"
-        class="px-4 py-2 rounded-md bg-muted hover:bg-muted/70 text-sm whitespace-nowrap"
+        class="px-4 py-2 rounded-md border border-border bg-white text-black shadow-sm hover:bg-muted/70 text-sm whitespace-nowrap transition-colors"
       >
         Voltar
       </RouterLink>
@@ -163,54 +163,74 @@
     <!-- CONTENT -->
     <div v-else>
       <div v-if="filteredItems.length" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        <div
+        <RouterLink
           v-for="imovel in paginatedItems"
           :key="imovel.id"
-          class="bg-muted/20 border border-border rounded-xl p-4 flex flex-col gap-3 hover:bg-muted/40 hover:shadow-sm transition-shadow"
+          :to="{ name: 'imoveis.show', params: { id: imovel.id } }"
+          class="group relative block overflow-hidden bg-card text-card-foreground border border-border rounded-xl p-4 flex flex-col gap-3 hover:bg-muted/20 hover:shadow-md transition-all cursor-pointer"
         >
-          <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
-              <p class="text-xs text-muted-foreground mb-1">Referência</p>
-              <p class="font-semibold truncate">{{ imovel.referencia || '-' }}</p>
+          <div class="pointer-events-none absolute -right-6 -top-4 h-28 w-28 rounded-full bg-primary/10"></div>
+          <div class="pointer-events-none absolute right-3 top-3 opacity-10 text-foreground">
+            <Home class="h-20 w-20" />
+          </div>
+
+          <div class="relative flex items-start gap-3">
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-border bg-muted text-foreground shadow-[3px_3px_0_0_#000]">
+              <Home class="h-6 w-6" />
+            </div>
+
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Imóvel</p>
+                <span
+                  class="px-2 py-1 text-xs rounded-full shrink-0 whitespace-nowrap"
+                  :class="imovel.ocupado ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'"
+                >
+                  {{ imovel.ocupado ? 'Ocupado' : 'Disponível' }}
+                </span>
+              </div>
+
+              <p class="font-semibold truncate mt-1">{{ imovel.referencia || '-' }}</p>
 
               <p class="text-sm text-muted-foreground mt-1 truncate">
                 {{ imovel.tipoImovel?.nome || '-' }} · {{ imovel.tipologia?.nome || '-' }}
               </p>
             </div>
-
-            <span
-              class="px-2 py-1 text-xs rounded-full shrink-0 whitespace-nowrap"
-              :class="imovel.ocupado ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'"
-            >
-              {{ imovel.ocupado ? 'Ocupado' : 'Disponível' }}
-            </span>
           </div>
 
-          <div class="grid grid-cols-2 gap-2">
-            <div class="rounded-lg border border-border p-2">
+          <div class="relative grid grid-cols-2 gap-2">
+            <div class="rounded-lg border border-border p-2 bg-background/70">
               <p class="text-xs text-muted-foreground mb-1">Área do Lote</p>
               <p class="text-sm font-medium">{{ imovel.area_lote || '0,00' }}</p>
             </div>
 
-            <div class="rounded-lg border border-border p-2">
+            <div class="rounded-lg border border-border p-2 bg-background/70">
               <p class="text-xs text-muted-foreground mb-1">Andar</p>
               <p class="text-sm font-medium">{{ imovel.andar || '-' }}</p>
             </div>
           </div>
 
-          <div class="flex items-center justify-between gap-3 mt-1">
+          <div class="relative flex items-center justify-between gap-3 mt-1 pt-3 border-t border-border/70">
             <p class="text-xs text-muted-foreground truncate">
               Criado: {{ imovel.created_at || '-' }}
             </p>
 
-            <RouterLink
-              :to="{ name: 'imoveis.show', params: { id: imovel.id } }"
-              class="px-3 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors whitespace-nowrap"
-            >
-              Ver imóvel
-            </RouterLink>
+            <span class="px-3 py-2 rounded-md bg-muted text-foreground text-sm font-medium whitespace-nowrap">
+              Saldo: {{ formatSaldoAcumulado(imovel.saldo_acumulado) }}
+            </span>
           </div>
-        </div>
+
+          <div class="relative flex items-center gap-2 rounded-lg border border-dashed border-border bg-muted/60 px-3 py-2">
+            <div class="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+              <Home class="h-4 w-4" />
+            </div>
+
+            <div class="min-w-0">
+              <p class="text-xs font-semibold uppercase tracking-wide text-primary">Ver imóvel</p>
+              <p class="text-xs text-muted-foreground truncate">Abrir detalhes, negociação e histórico</p>
+            </div>
+          </div>
+        </RouterLink>
       </div>
 
       <div v-else class="text-center py-12 text-muted-foreground">
@@ -223,8 +243,10 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
+import { Home } from 'lucide-vue-next'
 import http from '@/api/http'
 import tipoImovelService from '@/services/tipoImovelService'
+import { converteParaMonetario } from '@/utils/formatacao'
 
 const route = useRoute()
 const id = computed(() => route.params.id)
@@ -321,6 +343,11 @@ function resetFilters() {
   filters.value.ocupado = ''
   filters.value.texto = ''
   page.value = 1
+}
+
+function formatSaldoAcumulado(valor) {
+  if (valor == null || valor === '') return '-'
+  return converteParaMonetario(valor)
 }
 
 const load = async () => {

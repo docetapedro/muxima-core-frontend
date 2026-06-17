@@ -1,0 +1,1 @@
+import{h as t,e as a,_ as o,a1 as s,a4 as r,O as n}from"./index-BUQf__vo.js";const c={class:"text-center py-24 text-muted-foreground"},l={__name:"Show",setup(u){const e=r();return(_,i)=>(n(),t("div",c,[a("p",null,"Detalhe do beneficiário #"+o(s(e).params.id),1)]))}};export{l as default};

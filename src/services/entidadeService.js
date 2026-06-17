@@ -6,6 +6,10 @@ export default {
     return http.get('/api/entidades', { params })
   },
 
+  obter(id) {
+    return http.get(`/api/entidades/${id}`)
+  },
+
   criar(data) {
     return http.post('/api/entidades', data)
   },

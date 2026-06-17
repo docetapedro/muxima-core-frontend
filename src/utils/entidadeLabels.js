@@ -1,6 +1,14 @@
 export function getTipoEntidadeLabel(value) {
-  const tipos = { 1: 'Particular', 2: 'Empresa', 3: 'Instituição' }
-  return tipos[value] || value || '-'
+  const tipos = {
+    P: 'Pessoa',
+    E: 'Empresa',
+    1: 'Particular',
+    2: 'Empresa',
+    3: 'Instituição'
+  }
+
+  const key = value == null ? '' : String(value).trim().toUpperCase()
+  return tipos[key] || value || '-'
 }
 
 

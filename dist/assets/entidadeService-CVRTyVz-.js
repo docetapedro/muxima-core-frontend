@@ -1,1 +1,0 @@
-import{q as t}from"./index-Cf41q6D7.js";const i={listar(e={}){return t.get("/api/entidades",{params:e})},criar(e){return t.post("/api/entidades",e)},atualizar(e,a){return t.put(`/api/entidades/${e}`,a)},eliminar(e){return t.delete(`/api/entidades/${e}`)}};export{i as e};

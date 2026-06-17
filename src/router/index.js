@@ -61,6 +61,31 @@ const routes = [
         component: () => import('@/pages/pagamentos/Index.vue'),
       },
       {
+        path: 'negociacoes',
+        name: 'negociacoes',
+        component: () => import('@/pages/negociacoes/Index.vue'),
+      },
+      {
+        path: 'relatorios/negociacoes/:id/extrato-contas',
+        name: 'negociacoes.extrato-contas',
+        component: () => import('@/pages/negociacoes/ExtratoContas.vue'),
+      },
+      {
+        path: 'extrato-contas',
+        name: 'extrato-contas',
+        component: () => import('@/pages/extrato-contas/Index.vue'),
+      },
+      {
+        path: 'importacao/entidades',
+        name: 'importacao.entidades',
+        component: () => import('@/pages/importacoes/Entidades.vue'),
+      },
+      {
+        path: 'importacao/pagamentos',
+        name: 'importacao.pagamentos',
+        component: () => import('@/pages/importacoes/Pagamentos.vue'),
+      },
+      {
         path: 'municipios',
         name: 'municipios',
         component: () => import('@/pages/municipios/Index.vue'),
@@ -106,6 +131,11 @@ const routes = [
         component: () => import('@/pages/modelos/Index.vue'),
       },
       {
+        path: 'modelo-entregas',
+        name: 'modelo-entregas',
+        component: () => import('@/pages/modeloEntregas/Index.vue'),
+      },
+      {
         path: 'tipologias',
         name: 'tipologias',
         component: () => import('@/pages/tipologias/Index.vue'),
@@ -114,6 +144,51 @@ const routes = [
         path: 'tipoimoveis',
         name: 'tipoimoveis',
         component: () => import('@/pages/tipoimoveis/Index.vue'),
+      },
+      {
+        path: 'items',
+        name: 'items',
+        component: () => import('@/pages/items/Index.vue'),
+      },
+      {
+        path: 'tipoprojectos',
+        name: 'tipoprojectos',
+        component: () => import('@/pages/tipoprojectos/Index.vue'),
+      },
+      {
+        path: 'chat',
+        name: 'chat',
+        component: () => import('@/pages/chat/Index.vue'),
+      },
+      {
+        path: 'perfil',
+        name: 'perfil',
+        component: () => import('@/pages/perfil/Index.vue'),
+      },
+      {
+        path: 'relatorios/inadimplencia-condominio',
+        name: 'relatorios.inadimplencia-condominio',
+        component: () => import('@/pages/relatorios/InadimplenciaCondominio.vue'),
+      },
+      {
+        path: 'relatorios/analise-financeira',
+        name: 'relatorios.analise-financeira',
+        component: () => import('@/pages/relatorios/AnaliseFinanceira.vue'),
+      },
+      {
+        path: 'relatorios/aging-inadimplencia',
+        name: 'relatorios.aging-inadimplencia',
+        component: () => import('@/pages/relatorios/AgingInadimplencia.vue'),
+      },
+      {
+        path: 'relatorios/mapa-cobranca-mensal',
+        name: 'relatorios.mapa-cobranca-mensal',
+        component: () => import('@/pages/relatorios/MapaCobrancaMensal.vue'),
+      },
+      {
+        path: 'relatorios/cash-flow-projectado',
+        name: 'relatorios.cash-flow-projectado',
+        component: () => import('@/pages/relatorios/CashFlowProjectado.vue'),
       },
       ...buildPlaceholderRoutes(),
     ]

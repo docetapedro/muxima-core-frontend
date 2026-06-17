@@ -15,6 +15,12 @@
     <div class="bg-card border border-border rounded-xl p-4 flex flex-wrap gap-3">
       <input v-model="searchTerm" type="text" placeholder="Nome, Email, Telefone..."
         class="flex-1 min-w-48 px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+      <select v-model="tipoFilter"
+        class="px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+        <option value="">Tipo</option>
+        <option value="P">Pessoa</option>
+        <option value="E">Empresa</option>
+      </select>
       <button @click="pesquisar" :disabled="loading"
         class="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50">
         <Loader2 v-if="loading" class="w-4 h-4 animate-spin" />
@@ -58,10 +64,11 @@
             </tr>
             <tr v-else v-for="entidade in items" :key="entidade.id"
               class="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-              <td class="px-4 py-3">{{ entidade.tipo }}</td>
+              <td class="px-4 py-3">{{ getTipoEntidadeLabel(entidade.tipo) }}</td>
               <td class="px-4 py-3">{{ entidade.num_entidade }}</td>
               <td class="px-4 py-3">{{ entidade.nome }}</td>
-              <td class="px-4 py-3">{{ entidade.email }}</td>
+              <td class="px-4 py-3">{{ entidade
+              .email }}</td>
               <td class="px-4 py-3">{{ entidade.nif }}</td>
               <td class="px-4 py-3">{{ entidade.num_bi }}</td>
               <td class="px-4 py-3">{{ entidade.telefone }}</td>
@@ -132,11 +139,13 @@ import { ref, computed, onMounted } from 'vue'
 import { EyeIcon, Search, Loader2, Pencil, Trash2, PlusCircleIcon } from 'lucide-vue-next'
 import { useCrud } from '@/composables/useCrud'
 import entidadeservice from '@/services/entidadeService'
+import { getTipoEntidadeLabel } from '@/utils/entidadeLabels'
 import EntidadeViewModal from '@/components/entidades/EntidadeViewModal.vue'
 import EntidadeFormModal from '@/components/entidades/EntidadeFormModal.vue'
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal.vue'
 
 const searchTerm = ref('')
+const tipoFilter = ref('')
 const { items, paginacao, loading, fetchItems, destroy } = useCrud(entidadeservice)
 
 const pagesToShow = computed(() => {
@@ -164,6 +173,8 @@ function pesquisar(page = 1) {
   fetchItems({
     page,
     search: searchTerm.value || undefined,
+    tipo: tipoFilter.value || undefined,
+    tipo_entidade: tipoFilter.value || undefined
   })
 }
 
@@ -176,8 +187,15 @@ function openView(Entidade) {
   showViewModal.value = true
 }
 
-function openEdit(Entidade) {
+async function openEdit(Entidade) {
   selected.value = Entidade
+  try {
+    const res = await entidadeservice.obter(Entidade.id)
+    const full = res?.data?.dados ?? res?.data ?? null
+    if (full) selected.value = full
+  } catch (e) {
+    console.error(e)
+  }
   showEditModal.value = true
 }
 

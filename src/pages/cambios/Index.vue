@@ -55,8 +55,8 @@
             <tr v-else v-for="cambio in items" :key="cambio.id"
               class="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
               <td class="px-4 py-3">{{ cambio.data_cambio }}</td>
-              <td class="px-4 py-3">{{ cambio.cambio_usd }}</td>
-              <td class="px-4 py-3">{{ cambio.cambio_eur }}</td>
+              <td class="px-4 py-3">{{ converteParaMonetario(cambio.cambio_usd) }}</td>
+              <td class="px-4 py-3">{{ converteParaMonetario(cambio.cambio_eur) }}</td>
 
               <td class="px-4 py-3">
                 <div class="flex items-center gap-3">
@@ -115,7 +115,7 @@
     <CambioViewModal v-model="showViewModal" :Cambio="selected" />
     <CambioFormModal v-model="showCreateModal" mode="create" @success="pesquisar" />
     <CambioFormModal v-model="showEditModal" mode="edit" :record="selected" @success="pesquisar" />
-    <ConfirmDeleteModal v-model="showDeleteModal" entity-label="a cambio" :item-name="selected?.nome"
+    <ConfirmDeleteModal v-model="showDeleteModal" entity-label="a taxa de câmbio" :item-name="selected?.nome"
       :loading="deleting" :error="deleteError" @confirm="confirmDelete" />
   </div>
 </template>
@@ -125,6 +125,7 @@ import { ref, computed, onMounted } from 'vue'
 import { EyeIcon, Search, Loader2, Pencil, Trash2, PlusCircleIcon } from 'lucide-vue-next'
 import { useCrud } from '@/composables/useCrud'
 import cambioservice from '@/services/cambioService'
+import { converteParaMonetario } from '@/utils/formatacao'
 import CambioViewModal from '@/components/cambios/CambioViewModal.vue'
 import CambioFormModal from '@/components/cambios/CambioFormModal.vue'
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal.vue'

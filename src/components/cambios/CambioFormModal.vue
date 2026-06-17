@@ -9,11 +9,11 @@
     </form>
 
     <template #actions>
-      <button type="button" @click="visible = false" class="px-4 py-2 text-sm rounded-md bg-muted hover:bg-muted/70">
+      <button type="button" @click="visible = false" class="px-4 py-2 text-sm rounded-md bg-muted text-black hover:bg-muted/70">
         Cancelar
       </button>
       <button type="submit" form="cliente-form" :disabled="loading"
-        class="px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
+        class="px-4 py-2 text-sm rounded-md bg-primary text-white hover:bg-primary/90 disabled:opacity-50">
         <Loader2 v-if="loading" class="w-4 h-4 animate-spin inline mr-1" />
         {{ isEdit ? 'Salvar' : 'Salvar' }}
       </button>
@@ -28,6 +28,7 @@ import ModalWrapper from '@/components/common/ModalWrapper.vue'
 import CambioFormFields from './CambioFormFields.vue'
 import cambioService from '@/services/cambioService'
 import { useApiErrorHandler } from '@/composables/useApiErrorHandler'
+import { toast } from 'vue-sonner'
 import { emptyCambio, cambioFromRecord } from '@/utils/cambioForm'
 
 const props = defineProps({
@@ -68,7 +69,7 @@ async function submit() {
       ? await cambioService.atualizar(formData.value.id, formData.value)
       : await cambioService.criar(formData.value)
 
-    alert(response.data?.message || (isEdit.value ? 'Cambio atualizado !' : 'Cambio registrado!'))
+    toast.success(response.data?.message || (isEdit.value ? 'Cambio atualizado !' : 'Cambio registrado!'))
     emit('success')
     visible.value = false
   } catch (e) {

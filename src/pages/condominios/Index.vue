@@ -93,10 +93,34 @@ import { EyeIcon, Search, Loader2, Pencil, Trash2, PlusCircleIcon } from 'lucide
 import { useRouter } from 'vue-router'
 import { useCrud } from '@/composables/useCrud'
 import condominioService from '@/services/condominioService'
+import provinciaService from '@/services/provinciaService'
+import municipioService from '@/services/municipioService'
+import projectoService from '@/services/projectoService'
 import CondominioViewModal from '@/components/condominios/CondominioViewModal.vue'
 import CondominioFormModal from '@/components/condominios/CondominioFormModal.vue'
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal.vue'
 import { formatCondominioLabel } from '@/utils/condominioForm'
+import { getCachedLookup, invalidateLookup } from '@/composables/useLookupCache'
+
+function parseItems(res) {
+  const raw = res?.data?.dados?.items ?? res?.data?.dados ?? res?.data?.items ?? []
+  if (!Array.isArray(raw)) return []
+  return raw.filter((it) => it && (it.id != null || it.value != null))
+}
+
+function prefetchCondominioLookups() {
+  // Disparados em paralelo, sem aguardar — o cache fica quente antes de o
+  // utilizador abrir o modal "Novo Condomínio".
+  getCachedLookup('lookup:provincias', async () =>
+    parseItems(await provinciaService.listar({ quantidade: 30 }))
+  )
+  getCachedLookup('lookup:municipios:all', async () =>
+    parseItems(await municipioService.listar({ quantidade: 30 }))
+  )
+  getCachedLookup('lookup:projectos', async () =>
+    parseItems(await projectoService.listar())
+  )
+}
 
 const router = useRouter()
 
@@ -126,8 +150,14 @@ function openView(condominio) {
   router.push({ name: 'condominios.show', params: { id: condominio.id } })
 }
 
-function openEdit(condominio) {
-  selected.value = condominio
+async function openEdit(condominio) {
+  try {
+    const res = await condominioService.obter(condominio.id)
+    selected.value = res.data?.dados ?? res.data ?? condominio
+  } catch (e) {
+    console.error(e)
+    selected.value = condominio
+  }
   showEditModal.value = true
 }
 
@@ -144,10 +174,14 @@ async function confirmDelete() {
   const ok = await destroy(selected.value.id, deleteError)
   deleting.value = false
   if (ok) {
+    invalidateLookup('lookup:condominios')
     showDeleteModal.value = false
     selected.value = null
   }
 }
 
-onMounted(pesquisar)
+onMounted(() => {
+  pesquisar()
+  prefetchCondominioLookups()
+})
 </script>

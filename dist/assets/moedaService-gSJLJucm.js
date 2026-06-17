@@ -1,1 +1,0 @@
-import{q as e}from"./index-Cf41q6D7.js";const i={listar(a={}){return e.get("/api/moedas",{params:a})},criar(a){return e.post("/api/moedas",a)},atualizar(a,r){return e.put(`/api/moedas/${a}`,r)},eliminar(a){return e.delete(`/api/moedas/${a}`)}};export{i as m};

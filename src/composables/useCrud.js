@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { toast } from 'vue-sonner'
 import { useApiErrorHandler } from './useApiErrorHandler'
 
 export function useCrud(service) {
@@ -15,6 +16,7 @@ export function useCrud(service) {
       paginacao.value = res.data?.dados?.paginacao ?? null
     } catch (e) {
       console.error(e)
+      handleApiError(e)
     } finally {
       loading.value = false
     }
@@ -26,12 +28,14 @@ export function useCrud(service) {
 
   async function destroy(id, errorRef) {
     try {
-      await service.eliminar(id)
+      const res = await service.eliminar(id)
       removeFromList(id)
+      toast.success(res?.data?.message || 'Registo eliminado com sucesso.')
       return true
     } catch (e) {
       console.error(e)
       if (errorRef) errorRef.value = handleApiError(e)
+      else handleApiError(e)
       return false
     }
   }

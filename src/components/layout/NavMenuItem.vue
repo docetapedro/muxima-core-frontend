@@ -2,7 +2,7 @@
   <template v-if="item.type === 'title'">
     <p
       v-if="sidebarOpen"
-      class="px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50 first:pt-2"
+      class="px-4 pt-4 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400/70 first:pt-2"
     >
       {{ item.label }}
     </p>
@@ -11,38 +11,35 @@
   <RouterLink
     v-else-if="item.type === 'link' && depth === 0"
     :to="item.to"
-    class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-white"
-    :class="{ 'bg-sidebar-accent text-white': isPathActive(currentPath, item.to) }"
+    class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold text-slate-100 transition-colors hover:bg-slate-800 hover:text-white"
+    :class="{ 'bg-slate-800 text-white': isPathActive(currentPath, item.to) }"
     :title="!sidebarOpen ? item.label : undefined"
   >
-    <component :is="item.icon" class="w-5 h-5 shrink-0" />
+    <component :is="item.icon" class="w-5 h-5 shrink-0 opacity-95" />
     <span v-if="sidebarOpen" class="truncate">{{ item.label }}</span>
   </RouterLink>
 
   <RouterLink
     v-else-if="item.type === 'link'"
     :to="item.to"
-    class="flex items-center px-3 py-1.5 rounded-md text-sm transition-colors hover:bg-sidebar-accent hover:text-white"
+    class="flex items-center px-3 py-2 rounded-md text-sm text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
     :class="[
-      depth > 1 ? 'pl-2' : '',
-      { 'bg-sidebar-accent text-white font-medium': isPathActive(currentPath, item.to) }
+      depth > 1 ? 'pl-3' : '',
+      { 'bg-slate-800 text-white font-medium': isPathActive(currentPath, item.to) }
     ]"
   >
     <span class="truncate">{{ item.label }}</span>
   </RouterLink>
 
-  <div v-else-if="item.type === 'group'" class="space-y-0.5">
+  <div v-else-if="item.type === 'group'" class="space-y-1">
     <button
       type="button"
       @click="onToggle(item.name)"
-      class="w-full flex items-center gap-2 rounded-md text-sm transition-colors hover:bg-sidebar-accent hover:text-white"
-      :class="[
-        depth === 0 ? 'px-3 py-2 font-medium gap-3' : 'px-3 py-1.5 text-sidebar-foreground/90',
-        { 'bg-sidebar-accent/60 text-white': isItemActive(currentPath, item) }
-      ]"
+      class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold text-slate-100 transition-colors hover:bg-slate-800 hover:text-white"
+      :class="{ 'bg-slate-800 text-white': isItemActive(currentPath, item) }"
       :title="!sidebarOpen && depth === 0 ? item.label : undefined"
     >
-      <component v-if="depth === 0 && item.icon" :is="item.icon" class="w-5 h-5 shrink-0" />
+      <component v-if="depth === 0 && item.icon" :is="item.icon" class="w-5 h-5 shrink-0 opacity-95" />
       <span v-if="sidebarOpen || depth > 0" class="truncate flex-1 text-left">{{ item.label }}</span>
       <ChevronDown
         v-if="sidebarOpen"
@@ -53,8 +50,8 @@
 
     <div
       v-if="sidebarOpen && isExpanded(item.name)"
-      class="space-y-0.5 border-l border-sidebar-border"
-      :class="depth === 0 ? 'ml-4 pl-2' : 'ml-3 pl-2'"
+      class="space-y-1 border-l border-slate-800"
+      :class="depth === 0 ? 'ml-5 pl-3' : 'ml-4 pl-3'"
     >
       <NavMenuItem
         v-for="child in item.children"

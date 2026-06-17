@@ -23,6 +23,26 @@
         class="flex-1 min-w-48 px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
       />
 
+      <select
+        v-model="selectedTipoPagamento"
+        class="min-w-56 px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+      >
+        <option :value="null">Todos os tipos</option>
+        <option v-for="tipo in tiposPagamento" :key="tipo.id" :value="tipo.id">
+          {{ tipo.nome || tipo.descricao || tipo.codigo || `Tipo ${tipo.id}` }}
+        </option>
+      </select>
+
+      <select
+        v-model="selectedItem"
+        class="min-w-56 px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+      >
+        <option :value="null">Todos os itens</option>
+        <option v-for="it in itemOptions" :key="it.id" :value="it.id">
+          {{ itemSelectLabel(it) }}
+        </option>
+      </select>
+
       <button
         @click="pesquisar"
         :disabled="loading"
@@ -41,9 +61,9 @@
             <tr>
               <th class="text-left px-4 py-3 font-medium text-muted-foreground">Data</th>
               <th class="text-left px-4 py-3 font-medium text-muted-foreground">Valor</th>
-              <th class="text-left px-4 py-3 font-medium text-muted-foreground">Moeda</th>
               <th class="text-left px-4 py-3 font-medium text-muted-foreground">Imóvel</th>
-              <th class="text-left px-4 py-3 font-medium text-muted-foreground">TipoPagamento</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground">Tipo Pagamento</th>
+              <th class="text-left px-4 py-3 font-medium text-muted-foreground">Item Negociação</th>
               <th class="text-left px-4 py-3 font-medium text-muted-foreground">Operação</th>
               <th class="text-left px-4 py-3 font-medium text-muted-foreground">Operações</th>
             </tr>
@@ -69,9 +89,9 @@
                 {{ pag.valor == null ? '-' : converteParaMonetario(pag.valor) }}
               </td>
 
-              <td class="px-4 py-3">{{ pag.moeda?.sigla ?? pag.moeda?.nome ?? '-' }}</td>
-              <td class="px-4 py-3">{{ pag.negociacao?.imovel?.referencia ?? '-' }}</td>
-              <td class="px-4 py-3">{{ pag.tipoPagamento?.nome ?? '-' }}</td>
+              <td class="px-4 py-3">{{ getImovelReferencia(pag) }}</td>
+              <td class="px-4 py-3">{{ getTipoPagamentoLabel(pag) }}</td>
+              <td class="px-4 py-3">{{ getNegociacaoItemLabel(pag) }}</td>
 
               <td class="px-4 py-3">{{ pag.numero_operacao ?? '-' }}</td>
 
@@ -91,6 +111,16 @@
                     title="Editar"
                   >
                     <Pencil class="w-4 h-4" />
+                  </button>
+
+                  <button
+                    :disabled="pdfLoading[`${pag.id}-nota`]"
+                    @click="gerarNotaPdf(pag)"
+                    class="text-emerald-600 hover:text-emerald-700 transition-colors disabled:opacity-50"
+                    title="Imprimir nota de pagamento"
+                  >
+                    <Loader2 v-if="pdfLoading[`${pag.id}-nota`]" class="w-4 h-4 animate-spin" />
+                    <FileText v-else class="w-4 h-4" />
                   </button>
 
                   <button
@@ -135,9 +165,27 @@
       </div>
     </div>
 
-    <PagamentoViewModal v-model="showViewModal" :Pagamento="selected" />
-    <PagamentoFormModal v-model="showCreateModal" mode="create" @success="pesquisar" />
-    <PagamentoFormModal v-model="showEditModal" mode="edit" :record="selected" @success="pesquisar" />
+    <PagamentoViewModal
+      v-model="showViewModal"
+      :Pagamento="selected"
+      :tipos-pagamento="tiposPagamento"
+      :negociacoes="negociacoes"
+    />
+    <PagamentoFormModal
+      v-model="showCreateModal"
+      mode="create"
+      :tipos-pagamento="tiposPagamento"
+      :negociacoes="negociacoes"
+      @success="pesquisar"
+    />
+    <PagamentoFormModal
+      v-model="showEditModal"
+      mode="edit"
+      :record="selected"
+      :tipos-pagamento="tiposPagamento"
+      :negociacoes="negociacoes"
+      @success="pesquisar"
+    />
     <ConfirmDeleteModal
       v-model="showDeleteModal"
       entity-label="o pagamento"
@@ -150,16 +198,21 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue'
-import { EyeIcon, Search, Loader2, Pencil, Trash2, PlusCircleIcon } from 'lucide-vue-next'
+import { ref, onMounted } from 'vue'
+import { EyeIcon, FileText, Search, Loader2, Pencil, Trash2, PlusCircleIcon } from 'lucide-vue-next'
+import { toast } from 'vue-sonner'
 import { useCrud } from '@/composables/useCrud'
+import http from '@/api/http'
 import pagamentoService from '@/services/pagamentoService'
+import relatorioService from '@/services/relatorioService'
 import { converteParaMonetario } from '@/utils/formatacao'
 import PagamentoViewModal from '@/components/pagamentos/PagamentoViewModal.vue'
 import PagamentoFormModal from '@/components/pagamentos/PagamentoFormModal.vue'
 import ConfirmDeleteModal from '@/components/common/ConfirmDeleteModal.vue'
 
 const searchTerm = ref('')
+const selectedTipoPagamento = ref(null)
+const selectedItem = ref(null)
 
 const { items, paginacao, loading, fetchItems, destroy } = useCrud(pagamentoService)
 
@@ -172,10 +225,79 @@ const selected = ref(null)
 const deleting = ref(false)
 const deleteError = ref('')
 
+const tiposPagamento = ref([])
+const itemOptions = ref([])
+const negociacoes = ref([])
+
+function normalizeItems(payload) {
+  const dados = payload?.data?.dados
+  return Array.isArray(dados?.items) ? dados.items : (Array.isArray(dados) ? dados : [])
+}
+
+function getTipoPagamentoLabel(pag) {
+  const tipoId = pag?.tipoPagamento?.id ?? pag?.tipo_pagamento_id ?? pag?.tipo_pagamento
+  const tipo = tiposPagamento.value.find((item) => String(item.id) === String(tipoId))
+  return tipo?.nome || tipo?.descricao || tipo?.codigo || pag?.tipoPagamento?.nome || pag?.tipo_pagamento?.nome || pag?.tipo_pagamento?.descricao || '-'
+}
+
+function getNegociacaoItemRecord(pag) {
+  const niId =
+    pag?.negociacaoItem?.id
+    ?? pag?.negociacao_item_id
+    ?? (typeof pag?.negociacao_item === 'object' ? pag?.negociacao_item?.id : pag?.negociacao_item)
+  return negociacoes.value.find((record) => String(record.id) === String(niId)) ?? null
+}
+
+function getNegociacaoItemLabel(pag) {
+  const ni = getNegociacaoItemRecord(pag)
+  const nome = ni?.nome_item
+    ?? pag?.negociacaoItem?.item?.nome
+    ?? pag?.negociacao_item?.item?.nome
+  const codigo = ni?.codigo_item
+    ?? pag?.negociacaoItem?.item?.codigo
+    ?? pag?.negociacao_item?.item?.codigo
+  if (nome && codigo) return `${nome} (${codigo})`
+  return nome || codigo || '-'
+}
+
+function itemSelectLabel(it) {
+  if (!it) return ''
+  const nome = it.nome || it.descricao
+  const codigo = it.codigo
+  if (nome && codigo) return `${nome} (${codigo})`
+  return nome || codigo || `Item #${it.id}`
+}
+
+function getImovelReferencia(pag) {
+  const ni = getNegociacaoItemRecord(pag)
+  return (
+    ni?.referencia_imovel
+    || pag?.negociacaoItem?.negociacao?.imovel?.referencia
+    || pag?.negociacao_item?.negociacao?.imovel?.referencia
+    || pag?.negociacao?.imovel?.referencia
+    || pag?.imovel?.referencia
+    || '-'
+  )
+}
+
+async function loadSelects() {
+  const [tiposRes, itensRes, negRes] = await Promise.allSettled([
+    http.get('/api/tipopagamentos'),
+    http.get('/api/items'),
+    http.get('/api/negociacao-items/lista')
+  ])
+
+  tiposPagamento.value = tiposRes.status === 'fulfilled' ? normalizeItems(tiposRes.value) : []
+  itemOptions.value = itensRes.status === 'fulfilled' ? normalizeItems(itensRes.value) : []
+  negociacoes.value = negRes.status === 'fulfilled' ? normalizeItems(negRes.value) : []
+}
+
 function pesquisar(page = 1) {
   fetchItems({
     page,
-    search: searchTerm.value || undefined
+    search: searchTerm.value || undefined,
+    tipo_pagamento: selectedTipoPagamento.value || undefined,
+    item: selectedItem.value || undefined
   })
 }
 
@@ -212,7 +334,37 @@ async function confirmDelete() {
   }
 }
 
+const pdfLoading = ref({})
+
+async function gerarNotaPdf(pag) {
+  if (!pag?.id) return
+  const key = `${pag.id}-nota`
+  pdfLoading.value[key] = true
+  try {
+    const response = await relatorioService.pagamentoNotaPdf(pag.id)
+    const blob = new Blob([response.data], { type: 'application/pdf' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener,noreferrer')
+    setTimeout(() => URL.revokeObjectURL(url), 60_000)
+  } catch (e) {
+    console.error(e)
+    let msg = 'Falha ao gerar a nota de pagamento.'
+    if (e?.response?.data instanceof Blob && e.response.data.type === 'application/json') {
+      try {
+        const text = await e.response.data.text()
+        msg = JSON.parse(text)?.message || msg
+      } catch {}
+    } else if (e?.response?.data?.message) {
+      msg = e.response.data.message
+    }
+    toast.error(msg)
+  } finally {
+    pdfLoading.value[key] = false
+  }
+}
+
 onMounted(() => {
   pesquisar(1)
+  loadSelects()
 })
 </script>

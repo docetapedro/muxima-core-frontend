@@ -1,0 +1,1 @@
+import{u as o}from"./index-BUQf__vo.js";const t={listar(i={}){return o.get("/api/condominios",{params:i})},obter(i){return o.get(`/api/condominios/${i}`)},criar(i){return o.post("/api/condominios",i)},atualizar(i,r){return o.put(`/api/condominios/${i}`,r)},eliminar(i){return o.delete(`/api/condominios/${i}`)}};export{t as c};

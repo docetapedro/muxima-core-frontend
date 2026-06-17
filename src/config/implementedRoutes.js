@@ -8,11 +8,25 @@ const EXACT_PATHS = new Set([
   '/imoveis',
   '/municipios',
   '/modelos',
+  '/modelo-entregas',
   '/provincias',
   '/projectos',
   '/tipologias',
   '/tipoimoveis',
-  '/pagamentos'
+  '/tipoprojectos',
+  '/items',
+  '/chat',
+  '/perfil',
+  '/relatorios/inadimplencia-condominio',
+  '/relatorios/analise-financeira',
+  '/relatorios/aging-inadimplencia',
+  '/relatorios/mapa-cobranca-mensal',
+  '/relatorios/cash-flow-projectado',
+  '/pagamentos',
+  '/negociacoes',
+  '/extrato-contas',
+  '/importacao/entidades',
+  '/importacao/pagamentos'
 ])
 
 const PATH_PATTERNS = [
@@ -23,10 +37,15 @@ const PATH_PATTERNS = [
   /^\/imoveis\/[^/]+$/,
   /^\/municipios\/[^/]+$/,
   /^\/modelos\/[^/]+$/,
+  /^\/modelo-entregas\/[^/]+$/,
   /^\/provincias\/[^/]+$/,
   /^\/projectos\/[^/]+$/,
   /^\/tipologias\/[^/]+$/,
-  /^\/tipoimoveis\/[^/]+$/
+  /^\/tipoimoveis\/[^/]+$/,
+  /^\/tipoprojectos\/[^/]+$/,
+  /^\/items\/[^/]+$/,
+  /^\/relatorios\/negociacoes\/[^/]+\/extrato-contas$/,
+  /^\/importacao\/entidades$/
 ]
 
 export function isRouteImplemented(path) {
